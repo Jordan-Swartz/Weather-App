@@ -1,10 +1,20 @@
 from collections import deque
-
 import streamlit as st
 
-import streamlit as st
-
-st.set_page_config(page_title="Weather App", layout="wide")
+st.set_page_config(page_title="Weather App", layout="centered")
+st.markdown(
+    """
+    <style>
+    .block-container {
+        max-width: 1200px;   
+        margin: 0 auto;      /* center */
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 # Session State Initialization
 if "last_query" not in st.session_state:
@@ -27,13 +37,25 @@ else:
 st.title("Weather App")
 st.subheader("This Weather App is Pretty Cool")
 
+# How To
+st.subheader("How To Use")
+col1, col2, col3 = st.columns(3, gap="medium", border=True)
+
+with col1:
+    st.subheader("Weather Details")
+    st.metric("Temperature", "72 °F")
+
+with col2:
+    st.subheader("Actions")
+    st.button("Refresh")
+
 # Collect Input
-with st.form(key="weather_form"):
+with st.form("search_form"):
     location_text = st.text_input(
-        "Please enter your location",
+        "Please enter your location (city, state, ZIP, GPS)",
         placeholder="San Jose, CA 95123"
     )
-    submitted = st.form_submit_button("Submit") #reruns script upon submitting
+    submitted = st.form_submit_button("Search") #reruns script upon submitting
 
 if submitted:
     text = (location_text or "").strip()
@@ -48,10 +70,6 @@ if st.session_state.last_query is None:
     st.info("No location entered")
 else:
     st.success(f"You searched for {st.session_state.last_query}")
-
-
-# How To
-# st.subheader("How To Use")
 
 
 # Metric Widgets
