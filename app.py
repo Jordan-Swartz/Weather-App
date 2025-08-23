@@ -1,11 +1,32 @@
-from collections import deque
-
 import requests
 import streamlit as st
 
-from core.geocode import search_places
+from collections import deque
+from core.geocode import search_places, get_ip_location
 
 st.set_page_config(page_title="Weather App", layout="centered")
+
+# Header
+with st.container():
+    st.markdown(
+        """
+        <div style="
+            background-color: #172A4F;
+            border-radius: 15px;
+            margin-bottom: 1rem;
+            margin-top: 3rem;
+            color: white;
+            text-align: center;
+        ">
+            <h1 style="margin: 0.3em; font-size: 3rem;">
+                🌤️ JDS Weather Forecast
+            </h1>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+# Page Layout
 st.markdown(
     """
     <style>
@@ -43,9 +64,6 @@ else:
             st.session_state.last_query = item
             st.rerun()
 
-# Main UI
-st.title("Weather App")
-st.subheader("This Weather App is Pretty Cool")
 st.divider()
 
 # How To
@@ -53,19 +71,26 @@ st.subheader("How To Use")
 col1, col2, col3 = st.columns(3, gap="medium", border=True)
 
 with col1:
-    st.subheader("Input Location")
-    st.metric("City", "ZIP Code", "GPS ", border=True)
+    st.subheader("Input Location 📍")
+    st.badge("City: San Jose", icon=":material/check:", color="blue", width="stretch")
+    st.badge("ZIP: 95634", icon=":material/check:", color="blue")
+    st.badge("State: California", icon=":material/check:", color="blue")
+    st.badge("GPS: 37.7749, -122.4194", icon=":material/check:", color="blue")
 
 with col2:
-    st.subheader("Select Result")
-    st.button("Refresh")
+    st.subheader("Select Result ✅ ")
+    st.selectbox(
+        "Confirm Location?",
+        ("San Jose, California", "San José, Costa Rica", "San José, Philippines"),
+    )
 
 with col3:
-    st.subheader("View Forecast")
+    st.subheader("View Forecast 🌦️")
     st.metric("Temperature", "30°F", "-9°F", border=True)
 st.divider()
 
 # Collect Input
+st.subheader("Get Started")
 with st.form("search_form"):
     location_text = st.text_input(
         "Please enter your location (city, state, ZIP, GPS)",
@@ -100,7 +125,24 @@ if submitted:
 
 col1, col2 = st.columns([0.2, 0.8])
 with col1:
-    st.button("Use Current Location")
+    if st.button("Use Current Location"):
+        try:
+            ip_location = get_ip_location()
+            st.session_state.selected_place = ip_location
+            st.session_state.search_results = []  # clear any old results
+            label = ip_location["label"]
+
+            # keep history as strings for now
+            if label in st.session_state.history:
+                st.session_state.history.remove(label)
+            st.session_state.history.appendleft(label)
+            st.session_state.last_query = label
+            st.rerun()
+
+        except requests.RequestException:
+            st.error("Could not reach IP location service. Please try again.")
+        except Exception as e:
+            st.error(f"Location error: {e}")
 
 with col2:
     if st.session_state.last_query is None:
@@ -113,7 +155,7 @@ results = st.session_state.search_results
 if results:
     labels = [p["label"] for p in results]
     # Display Results in Selectbox
-    choice = st.selectbox("Confirm location", options=labels, index=0, key="confirm_select")
+    choice = st.selectbox("Confirm Location", options=labels, index=0, key="confirm_select")
     if st.button("Use this location", key="confirm_btn"):
         picked = results[labels.index(choice)]
         st.session_state.selected_place = picked
@@ -122,9 +164,13 @@ if results:
             st.session_state.history.remove(picked["label"])
         st.session_state.history.appendleft(picked["label"])
         st.rerun()
+st.divider()
 
+# Weather Results
+st.subheader("Weather & Forecast")
 st.markdown("<br><br><br>", unsafe_allow_html=True)
 st.markdown("<br><br><br>", unsafe_allow_html=True)
+
 
 # Metric Widgets
 # a, b = st.columns(2)
