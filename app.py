@@ -19,7 +19,7 @@ with st.container():
             text-align: center;
         ">
             <h1 style="margin: 0.3em; font-size: 3rem;">
-                🌤️ JDS Weather Forecast
+                🌤️ JDS Weather & Forecast
             </h1>
         </div>
         """,
@@ -68,7 +68,7 @@ st.divider()
 
 # How To
 st.subheader("How To Use")
-col1, col2, col3 = st.columns(3, gap="medium", border=True)
+col1, col2, col3, col4= st.columns(4, gap="medium", border=True)
 
 with col1:
     st.subheader("Input Location 📍")
@@ -87,6 +87,13 @@ with col2:
 with col3:
     st.subheader("View Forecast 🌦️")
     st.metric("Temperature", "30°F", "-9°F", border=True)
+
+with col4:
+    st.subheader("Refresh History 📂")
+    st.button("New York, New York")
+    st.button("San Francisco, California")
+    st.button("Truckers, Georgia")
+
 st.divider()
 
 # Collect Input
@@ -156,7 +163,7 @@ if results:
     labels = [p["label"] for p in results]
     # Display Results in Selectbox
     choice = st.selectbox("Confirm Location", options=labels, index=0, key="confirm_select")
-    if st.button("Use this location", key="confirm_btn"):
+    if st.button("Use This Location", key="confirm_btn"):
         picked = results[labels.index(choice)]
         st.session_state.selected_place = picked
         # Keep your history as strings for now (label is enough to test)
@@ -168,16 +175,24 @@ st.divider()
 
 # Weather Results
 st.subheader("Weather & Forecast")
-st.markdown("<br><br><br>", unsafe_allow_html=True)
-st.markdown("<br><br><br>", unsafe_allow_html=True)
+st.write("Current Weather")
+a, b = st.columns(2)
+c, d = st.columns(2)
 
+a.metric("Temperature", "30°F", "-9°F", border=True)
+b.metric("Wind", "4 mph", "2 mph", border=True)
 
-# Metric Widgets
-# a, b = st.columns(2)
-# c, d = st.columns(2)
-#
-# a.metric("Temperature", "30°F", "-9°F", border=True)
-# b.metric("Wind", "4 mph", "2 mph", border=True)
-#
-# c.metric("Humidity", "77%", "5%", border=True)
-# d.metric("Pressure", "30.34 inHg", "-2 inHg", border=True)
+c.metric("Humidity", "77%", "5%", border=True)
+d.metric("Pressure", "30.34 inHg", "-2 inHg", border=True)
+
+st.write("Expected Forecast")
+
+st.divider()
+
+# Feedback
+st.subheader("Feedback")
+sentiment_mapping = [":material/thumb_down:", ":material/thumb_up:"]
+selected = st.feedback("thumbs")
+if selected is not None:
+    st.markdown(f"You selected: {sentiment_mapping[selected]}")
+st.markdown("<br><br>", unsafe_allow_html=True)
