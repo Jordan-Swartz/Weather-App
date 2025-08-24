@@ -2,6 +2,7 @@ from __future__ import annotations
 import openmeteo_requests
 import requests_cache
 from retry_requests import retry
+import pandas as pd
 
 BASE_URL = "https://api.open-meteo.com/v1/forecast"
 
@@ -47,8 +48,9 @@ def get_current_weather(lat: float, lon: float, unit="fahrenheit"):
     # request via open-meteo client
     response = _client.weather_api(BASE_URL, params=params)
     resp = response[0]
-
     current = resp.Current()
+
+    # extract array data
     temperature = current.Variables(0).Value()
     humidity = current.Variables(1).Value()
     weather_code = int(current.Variables(2).Value())
@@ -66,6 +68,44 @@ def get_current_weather(lat: float, lon: float, unit="fahrenheit"):
         "today_high": float(today_high),
         "today_low": float(today_low),
     }
+def get_forecast(lat: float, lon: float, days: int = 5, unit="fahrenheit"):
+    params = {
+        "latitude": lat,
+        "longitude": lon,
+        "timezone": "auto",
+        "temperature_unit": unit,
+        "precipitation_unit": "inch",
+        "daily": "weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max",
+        "forecast_days": days,
+    }
 
-def get_forecast(lat: float, lon: float,  days: int, unit="fahrenheit"):
-    params = {}
+    responses = _client.weather_api(BASE_URL, params=params)
+    resp = responses[0]
+    daily = resp.Daily()
+
+    # extract array data
+    codes = daily.Variables(0).ValuesAsNumpy()
+    tmax  = daily.Variables(1).ValuesAsNumpy()
+    tmin  = daily.Variables(2).ValuesAsNumpy()
+    psum  = daily.Variables(3).ValuesAsNumpy()
+    pprob = daily.Variables(4).ValuesAsNumpy()
+
+    # Build readable date strings
+    dates = pd.date_range(
+        start=pd.to_datetime(daily.Time(), unit="s", utc=True),
+        end=pd.to_datetime(daily.TimeEnd(), unit="s", utc=True),
+        freq=pd.Timedelta(seconds=daily.Interval()),
+        inclusive="left",
+    ).tz_convert(None).strftime("%Y-%m-%d").tolist()
+
+    rows = []
+    for i, d in enumerate(dates):
+        rows.append({
+            "date": d,
+            ("high_f" if unit == "fahrenheit" else "high_c"): float(tmax[i]),
+            ("low_f"  if unit == "fahrenheit" else "low_c"):  float(tmin[i]),
+            "precip_in": float(psum[i]),
+            "precip_prob_%": int(pprob[i]),
+            "condition": WEATHER_CODE.get(int(codes[i]), "—"),
+        })
+    return rows

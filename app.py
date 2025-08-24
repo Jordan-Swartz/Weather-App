@@ -1,6 +1,8 @@
 import requests
 import streamlit as st
+import pandas as pd
 
+from core.weather import get_forecast
 from collections import deque
 from core.geocode import search_places, get_ip_location
 from core.weather import get_current_weather
@@ -177,6 +179,7 @@ st.divider()
 
 # Weather Results
 st.subheader("Weather & Forecast")
+st.write("Current Weather")
 
 place = st.session_state.selected_place
 if place:
@@ -203,21 +206,21 @@ else:
 st.write("Expected Forecast")
 place = st.session_state.selected_place
 if place:
-    current_weather = get_current_weather(
-        place["lat"],
-        place["lon"],
-        unit="fahrenheit"
-    )
-    a, b = st.columns(2)
-    c, d = st.columns(2)
-    with a:
-        st.metric("Temperature", f"{current_weather['temperature']:.0f}°F")
-    with b:
-        st.metric("Humidity", f"{current_weather['humidity']:.0f}%")
-    with c:
-        st.metric("Condition", current_weather['condition'])
-    with d:
-        st.metric("Weather Code", str(current_weather['weathercode']), border=True)
+    days = 5
+    daily_rows = get_forecast(place["lat"], place["lon"], days=days, unit="fahrenheit")
+
+    frame = pd.DataFrame(daily_rows)
+    frame = frame.rename(columns={
+        "date": "Date",
+        "high_f": "High (°F)",
+        "low_f": "Low (°F)",
+        "precip_in": "Precip (in)",
+        "precip_prob_%": "Precip Prob (%)",
+        "condition": "Condition",
+    })
+
+    st.subheader(f"Next {days} Days")
+    st.dataframe(frame, use_container_width=True)
 else:
     st.info("Select a location to see expected forecast.")
 
