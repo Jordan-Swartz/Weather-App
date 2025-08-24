@@ -1,2 +1,9 @@
 streamlit
 requests
+pandas
+numpy
+
+# Weather client + reliability helpers
+openmeteo-requests
+requests-cache
+retry-requests

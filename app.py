@@ -3,6 +3,7 @@ import streamlit as st
 
 from collections import deque
 from core.geocode import search_places, get_ip_location
+from core.weather import get_current_weather
 
 st.set_page_config(page_title="Weather App", layout="centered")
 
@@ -139,7 +140,7 @@ with col1:
             st.session_state.search_results = []  # clear any old results
             label = ip_location["label"]
 
-            # keep history as strings for now
+            # temp history as string
             if label in st.session_state.history:
                 st.session_state.history.remove(label)
             st.session_state.history.appendleft(label)
@@ -171,21 +172,54 @@ if results:
             st.session_state.history.remove(picked["label"])
         st.session_state.history.appendleft(picked["label"])
         st.rerun()
+
 st.divider()
 
 # Weather Results
 st.subheader("Weather & Forecast")
-st.write("Current Weather")
-a, b = st.columns(2)
-c, d = st.columns(2)
 
-a.metric("Temperature", "30°F", "-9°F", border=True)
-b.metric("Wind", "4 mph", "2 mph", border=True)
-
-c.metric("Humidity", "77%", "5%", border=True)
-d.metric("Pressure", "30.34 inHg", "-2 inHg", border=True)
+place = st.session_state.selected_place
+if place:
+    current_weather = get_current_weather(
+        place["lat"],
+        place["lon"],
+        unit="fahrenheit"
+    )
+    a, b = st.columns(2)
+    c, d = st.columns(2)
+    with a:
+        st.metric("Temperature", f"{current_weather['temperature']:.0f}°F",
+          delta=f"{current_weather['temperature'] - current_weather['today_low']:.0f}° above low", border=True)
+    with b:
+        st.metric("Humidity", f"{current_weather['humidity']:.0f}%",
+                  delta=f"{current_weather['humidity'] - 50}% vs. avg", border=True)
+    with c:
+        st.metric("Condition", current_weather['condition'], border=True)
+    with d:
+        st.metric("Wind", f"{current_weather['wind_mph']:.0f} mph", border=True)
+else:
+    st.info("Select a location to see current weather.")
 
 st.write("Expected Forecast")
+place = st.session_state.selected_place
+if place:
+    current_weather = get_current_weather(
+        place["lat"],
+        place["lon"],
+        unit="fahrenheit"
+    )
+    a, b = st.columns(2)
+    c, d = st.columns(2)
+    with a:
+        st.metric("Temperature", f"{current_weather['temperature']:.0f}°F")
+    with b:
+        st.metric("Humidity", f"{current_weather['humidity']:.0f}%")
+    with c:
+        st.metric("Condition", current_weather['condition'])
+    with d:
+        st.metric("Weather Code", str(current_weather['weathercode']), border=True)
+else:
+    st.info("Select a location to see expected forecast.")
 
 st.divider()
 
