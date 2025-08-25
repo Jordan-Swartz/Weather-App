@@ -4,7 +4,14 @@ A Python and Streamlit-based web application that provides current weather condi
 ---
 
 ## 1: 📌 About the Project:
-A Python and Streamlit-based web application that recommends the most relevant job candidates based on a provided job description. The engine uses modern NLP techniques to generate semantic embeddings of resumes and job descriptions, then computes similarity scores to rank candidates. 
+This project is a weather forecasting tool built with Python and Streamlit.
+It allows users to:
+- Search for locations (city, ZIP, GPS coordinates, landmarks).
+- View current weather (temperature, humidity, condition, wind speed).
+- See a 5-day forecast displayed in a structured table.
+- Keep a history of recent searches.
+- Persist queries (location + date range) in a database with CRUD support (In Progress)
+- The app integrates with the Open-Meteo API for geocoding and weather data, and uses SQLite for persistence.
 
 ---
 
@@ -32,7 +39,7 @@ A Python and Streamlit-based web application that recommends the most relevant j
 
 ## 3: 🚀 Running the Project:
 ### 🔗 Public Link
-- Streamlit Link: [Project Link](https://jordan-swartz-candidate-recommendation-app-qmui0u.streamlit.app/)
+- Streamlit Link: [Project Link](https://jswartzweatherapp.streamlit.app)
 
 ### 🎥 Project Demo
 - Screencast: [Project Demo](https://youtu.be/x4iXwUUqWkw)
